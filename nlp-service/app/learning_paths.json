@@ -1,0 +1,35 @@
+{
+  "Java": [
+    "Java Programming Fundamentals (practice OOP + collections)",
+    "Build a small REST API in Java"
+  ],
+  "Spring Boot": [
+    "Spring Boot Basics: Controllers, Services, JPA",
+    "Add authentication (JWT) and error handling"
+  ],
+  "MySQL": [
+    "MySQL Fundamentals: schema design + indexing",
+    "Use JPA repositories and migrations"
+  ],
+  "MongoDB": [
+    "MongoDB Basics: documents, queries, aggregation",
+    "Model a Resume/Job catalog with Mongo"
+  ],
+  "React": [
+    "React Fundamentals: components, props/state, hooks",
+    "Build forms + file upload UI"
+  ],
+  "spaCy": [
+    "spaCy Essentials: pipelines, tokenization, NER basics",
+    "Create an entity rule-based skill extractor"
+  ],
+  "BERT": [
+    "BERT/Sentence Transformers: embeddings and similarity",
+    "Evaluate cosine similarity on job matching"
+  ],
+  "Machine Learning": [
+    "ML Basics: classification vs similarity matching",
+    "Prototype matching using embeddings"
+  ]
+}
+

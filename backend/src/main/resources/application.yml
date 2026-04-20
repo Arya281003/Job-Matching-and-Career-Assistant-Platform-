@@ -1,0 +1,38 @@
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+
+nlp:
+  service:
+    base-url: http://localhost:8001
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  datasource:
+    # Default demo mode: in-memory H2 (so you can run without MySQL right now).
+    # To use MySQL later, set SPRING_PROFILES_ACTIVE=mysql and add application-mysql.yml (or adjust configs).
+    url: jdbc:h2:mem:jobmatch_db;DB_CLOSE_DELAY=-1;MODE=MySQL
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/jobmatch_db}
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173
+
