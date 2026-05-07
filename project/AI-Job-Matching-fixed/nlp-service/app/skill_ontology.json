@@ -1,0 +1,54 @@
+[
+  "Java", "Python", "JavaScript", "TypeScript", "Kotlin", "Scala",
+  "Go", "Rust", "C", "C++", "C#", "Swift", "R", "MATLAB",
+  "Ruby", "PHP", "Perl", "Dart", "Elixir", "Haskell", "Lua",
+
+  "React", "Angular", "Vue", "Next.js", "Nuxt.js", "Svelte",
+  "HTML", "CSS", "Sass", "Tailwind CSS", "Bootstrap", "Material UI",
+  "Redux", "Zustand", "GraphQL", "REST", "WebSockets", "PWA",
+  "Webpack", "Vite", "Babel",
+
+  "Spring Boot", "Spring Framework", "Spring Security", "Spring Cloud",
+  "Django", "Flask", "FastAPI", "Express.js", "NestJS",
+  "Node.js", "ASP.NET", "Laravel", "Ruby on Rails",
+  "gRPC", "Microservices", "API Gateway", "API Integration",
+
+  "MySQL", "PostgreSQL", "Oracle", "SQL Server", "SQLite",
+  "MongoDB", "Cassandra", "DynamoDB", "Redis", "Elasticsearch",
+  "Firebase", "Firestore", "HBase", "Neo4j", "CouchDB",
+  "SQL", "NoSQL", "ORM", "Hibernate", "JDBC",
+
+  "AWS", "Azure", "Google Cloud", "GCP", "Heroku", "DigitalOcean",
+  "Docker", "Kubernetes", "Terraform", "Ansible", "Helm",
+  "CI/CD", "Jenkins", "GitHub Actions", "GitLab CI", "CircleCI",
+  "Linux", "Bash", "Shell Scripting", "Nginx", "Apache",
+  "Load Balancing", "CDN", "S3", "EC2", "Lambda",
+
+  "Machine Learning", "Deep Learning", "NLP", "Computer Vision",
+  "TensorFlow", "PyTorch", "Keras", "Scikit-learn", "XGBoost",
+  "BERT", "GPT", "Transformers", "Hugging Face", "LangChain",
+  "spaCy", "NLTK", "OpenCV", "Pandas", "NumPy", "Matplotlib",
+  "Data Analysis", "Data Visualization", "Feature Engineering",
+  "Model Training", "Model Deployment", "MLOps",
+  "Resume Parsing", "Semantic Search", "Embeddings",
+  "Reinforcement Learning", "GANs", "LLMs",
+
+  "Security", "Cybersecurity", "JWT", "OAuth", "OAuth2",
+  "OWASP", "Penetration Testing", "Encryption", "SSL/TLS",
+  "Authentication", "Authorization", "RBAC", "IAM",
+
+  "Apache Kafka", "Apache Spark", "Hadoop", "Airflow",
+  "ETL", "Data Pipeline", "Data Warehousing", "Snowflake",
+  "BigQuery", "dbt", "Flink",
+
+  "Android", "iOS", "React Native", "Flutter", "Xamarin",
+
+  "Git", "GitHub", "GitLab", "Bitbucket", "Jira", "Confluence",
+  "Agile", "Scrum", "Kanban", "TDD", "BDD", "Unit Testing",
+  "Integration Testing", "Selenium", "JUnit", "Pytest",
+  "Design Patterns", "SOLID", "Clean Code", "Code Review",
+  "System Design", "Distributed Systems", "Event-Driven Architecture",
+
+  "Problem Solving", "Communication", "Teamwork", "Leadership",
+  "Project Management", "Technical Writing", "Mentoring"
+]

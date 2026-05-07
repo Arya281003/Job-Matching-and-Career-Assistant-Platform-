@@ -1,0 +1,20 @@
+{
+  "Java Backend Developer": [
+    "Explain REST API design and how you structure controllers/services/repositories.",
+    "What are common MySQL schema/indexing strategies you would use for performance?",
+    "How do you secure APIs (authentication, authorization, input validation)?",
+    "Describe a project where you used NLP/embeddings for matching or recommendations."
+  ],
+  "Frontend Developer (React)": [
+    "How do you manage state in React (hooks vs global state approaches)?",
+    "How do you handle file uploads and API integration securely?",
+    "Describe a component architecture you used in a real app."
+  ],
+  "Data Scientist / NLP Engineer": [
+    "How do embeddings help with semantic similarity for job matching?",
+    "Explain cosine similarity and why normalization matters.",
+    "How would you design an evaluation strategy for matching quality?",
+    "How would you extract skills from resumes using NLP (NER/rules/embeddings)?"
+  ]
+}
+

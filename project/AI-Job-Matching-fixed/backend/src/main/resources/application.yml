@@ -1,0 +1,41 @@
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+
+nlp:
+  service:
+    base-url: http://localhost:8001
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  datasource:
+    url: jdbc:h2:mem:jobmatch_db;DB_CLOSE_DELAY=-1;MODE=MySQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+    show-sql: false
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/jobmatch_db
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173
+  jwt:
+    secret: jobmatch-super-secret-key-change-this-in-production-2024
+    expiration-ms: 86400000
