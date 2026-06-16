@@ -1,548 +1,657 @@
 import { useEffect, useMemo, useState } from "react";
-import { getProfile, loginUser, matchResume, registerUser, upsertProfile } from "./api";
+import { api, setAuthToken } from "./api";
 
-export default function App() {
-  const [authTab, setAuthTab] = useState("login"); // "login" | "register"
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [user, setUser] = useState(null);
-  const [activePage, setActivePage] = useState("match"); // "profile" | "match" | "results"
-  const [profile, setProfile] = useState(null);
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [profileForm, setProfileForm] = useState({
-    education: "",
-    skills: "",
-    experience: "",
-    careerPreferences: ""
+const sampleProfile = {
+  education: "B.Tech Computer Science",
+  skills: "Java, Spring Boot, React, Python, MySQL",
+  experience: "Built REST APIs, responsive React dashboards, and NLP prototypes.",
+  careerPreferences: "Backend Developer, Full Stack Developer, NLP Engineer",
+};
+
+function list(items) {
+  return Array.isArray(items) ? items.filter(Boolean) : [];
+}
+
+function scorePercent(score) {
+  const value = Number(score || 0);
+  const normalized = value <= 1 ? value * 100 : value;
+  return Math.max(0, Math.min(100, Math.round(normalized)));
+}
+
+function searchUrl(base, skill) {
+  return `${base}${encodeURIComponent(skill)}`;
+}
+
+function learningOptionsFor(skill, suggestions) {
+  const suggestionText = list(suggestions)
+    .filter((item) => item.toLowerCase().includes(skill.toLowerCase()))
+    .slice(0, 2);
+
+  return [
+    {
+      type: "YouTube videos",
+      title: `${skill} beginner tutorials`,
+      detail: "Watch practical video lessons and project walkthroughs.",
+      url: searchUrl("https://www.youtube.com/results?search_query=", `${skill} tutorial for beginners`),
+    },
+    {
+      type: "Free notes",
+      title: `${skill} notes and examples`,
+      detail: suggestionText[0] || "Read free notes, examples, and interview-focused explanations.",
+      url: searchUrl("https://www.google.com/search?q=", `${skill} free notes tutorial`),
+    },
+    {
+      type: "EdTech platform",
+      title: `${skill} structured course`,
+      detail: suggestionText[1] || "Follow a structured course path with exercises and certificates.",
+      url: searchUrl("https://www.coursera.org/search?query=", skill),
+    },
+  ];
+}
+
+function App() {
+  const [page, setPage] = useState(() => {
+    const saved = localStorage.getItem("jobmatch:user");
+    return saved ? "upload" : "auth";
   });
-
+  const [mode, setMode] = useState("login");
+  const [authForm, setAuthForm] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+  });
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem("jobmatch:user");
+    const parsed = saved ? JSON.parse(saved) : null;
+    setAuthToken(parsed?.token || "");
+    return parsed;
+  });
+  const [profile, setProfile] = useState(sampleProfile);
+  const [jobs, setJobs] = useState([]);
+  const [analyses, setAnalyses] = useState([]);
   const [resumeFile, setResumeFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [result, setResult] = useState(null);
+  const [parseResult, setParseResult] = useState(null);
+  const [matchResult, setMatchResult] = useState(null);
+  const [busy, setBusy] = useState("");
+  const [notice, setNotice] = useState("");
 
-  const canSubmitAuth = useMemo(() => {
-    if (authTab === "register") return email && password && fullName;
-    return email && password;
-  }, [authTab, email, password, fullName]);
-
-  const emptyProfileForm = useMemo(
-    () => ({
-      education: "",
-      skills: "",
-      experience: "",
-      careerPreferences: ""
-    }),
-    []
-  );
-
-  async function handleAuth(e) {
-    e.preventDefault();
-    setError("");
-    setResult(null);
-
-    try {
-      setLoading(true);
-      if (authTab === "register") {
-        const u = await registerUser({ email, password, fullName });
-        setUser(u);
-      } else {
-        const u = await loginUser({ email, password });
-        setUser(u);
-      }
-      setActivePage("match");
-    } catch (err) {
-      setError(err.message || "Auth failed");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const topMatch = useMemo(() => list(matchResult?.matches)[0], [matchResult]);
 
   useEffect(() => {
-    async function loadProfile() {
-      if (!user?.id) return;
-      setProfileLoading(true);
-      setProfile(null);
-      try {
-        const p = await getProfile(user.id);
-        setProfile(p);
-        if (p) {
-          setProfileForm({
-            education: p.education || "",
-            skills: p.skills || "",
-            experience: p.experience || "",
-            careerPreferences: p.careerPreferences || ""
-          });
-        } else {
-          setProfileForm(emptyProfileForm);
-        }
-      } catch (err) {
-        setError(err.message || "Failed to load profile");
-      } finally {
-        setProfileLoading(false);
-      }
-    }
+    if (!user?.id) return;
+    setAuthToken(user.token || "");
 
-    loadProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
-  function handleLogout() {
-    setUser(null);
-    setProfile(null);
-    setResult(null);
-    setAuthTab("login");
-    setEmail("");
-    setPassword("");
-    setFullName("");
-    setProfileForm(emptyProfileForm);
-    setActivePage("match");
-    setError("");
-  }
-
-  async function handleSaveProfile(e) {
-    e.preventDefault();
-    setError("");
-    setResult(null);
-    try {
-      setLoading(true);
-      const saved = await upsertProfile({
-        userId: user.id,
-        education: profileForm.education,
-        skills: profileForm.skills,
-        experience: profileForm.experience,
-        careerPreferences: profileForm.careerPreferences
+    api.getProfile(user.id)
+      .then((savedProfile) => {
+        setProfile({
+          education: savedProfile.education || "",
+          skills: savedProfile.skills || "",
+          experience: savedProfile.experience || "",
+          careerPreferences: savedProfile.careerPreferences || "",
+        });
+      })
+      .catch(() => {
+        setProfile(sampleProfile);
       });
-      setProfile(saved);
-    } catch (err) {
-      setError(err.message || "Profile save failed");
+
+    api.listJobs().then(setJobs).catch(() => setJobs([]));
+    api.listAnalyses().then(setAnalyses).catch(() => setAnalyses([]));
+  }, [user?.id]);
+
+  async function run(label, action) {
+    setBusy(label);
+    setNotice("");
+    try {
+      await action();
+    } catch (error) {
+      setNotice(error.message || "Something went wrong.");
     } finally {
-      setLoading(false);
+      setBusy("");
     }
   }
 
-  async function handleMatch(e) {
-    e.preventDefault();
-    setError("");
-    setResult(null);
+  function updateAuthForm(event) {
+    const { name, value } = event.target;
+    setAuthForm((current) => ({ ...current, [name]: value }));
+  }
 
-    if (!resumeFile) {
-      setError("Please upload a resume file (PDF/DOCX).");
+  function updateProfile(event) {
+    const { name, value } = event.target;
+    setProfile((current) => ({ ...current, [name]: value }));
+  }
+
+  async function submitAuth(event) {
+    event.preventDefault();
+    await run(mode === "login" ? "Signing in" : "Creating account", async () => {
+      const payload = mode === "login"
+        ? { email: authForm.email, password: authForm.password }
+        : authForm;
+      const signedInUser = mode === "login"
+        ? await api.login(payload)
+        : await api.register(payload);
+
+      setUser(signedInUser);
+      setAuthToken(signedInUser.token || "");
+      localStorage.setItem("jobmatch:user", JSON.stringify(signedInUser));
+      setPage("upload");
+      setNotice(`Welcome, ${signedInUser.fullName}.`);
+    });
+  }
+
+  async function saveProfileOnly() {
+    if (!user?.id) {
+      setNotice("Sign in before saving a profile.");
+      setPage("auth");
       return;
     }
 
-    try {
-      setLoading(true);
-      const res = await matchResume(resumeFile);
-      setResult(res);
-      setActivePage("results");
-    } catch (err) {
-      setError(err.message || "Matching failed");
-    } finally {
-      setLoading(false);
+    const saved = await api.saveProfile({ userId: user.id, ...profile });
+    setProfile({
+      education: saved.education || "",
+      skills: saved.skills || "",
+      experience: saved.experience || "",
+      careerPreferences: saved.careerPreferences || "",
+    });
+  }
+
+  async function analyzeResume(event) {
+    event.preventDefault();
+    if (!resumeFile) {
+      setNotice("Choose a PDF or DOCX resume first.");
+      return;
     }
+
+    await run("Analyzing resume", async () => {
+      await saveProfileOnly();
+      const parsed = await api.parseResume(resumeFile);
+      const matched = await api.matchResume(resumeFile, user?.id);
+      setParseResult(parsed);
+      setMatchResult(matched);
+      api.listAnalyses().then(setAnalyses).catch(() => {});
+      setPage("results");
+      setNotice("Resume analysis is ready.");
+    });
+  }
+
+  async function analyzeProfileOnly() {
+    if (!user?.id) {
+      setNotice("Sign in before finding job roles.");
+      setPage("auth");
+      return;
+    }
+
+    const hasProfileInput = Object.values(profile).some((value) => String(value || "").trim());
+    if (!hasProfileInput) {
+      setNotice("Fill the candidate profile before finding job roles.");
+      return;
+    }
+
+    await run("Finding job roles", async () => {
+      const matched = await api.matchProfile({ userId: user.id, ...profile });
+      setParseResult(null);
+      setMatchResult(matched);
+      api.listAnalyses().then(setAnalyses).catch(() => {});
+      setPage("results");
+      setNotice("Profile-based job analysis is ready.");
+    });
+  }
+
+  async function refreshLiveJobs() {
+    await run("Refreshing live jobs", async () => {
+      const result = await api.importLiveJobs("software");
+      const latestJobs = await api.listJobs();
+      setJobs(latestJobs);
+      setNotice(`Imported ${result.saved} live jobs from ${result.source}.`);
+    });
+  }
+
+  function signOut() {
+    setUser(null);
+    setAuthToken("");
+    setPage("auth");
+    setParseResult(null);
+    setMatchResult(null);
+    localStorage.removeItem("jobmatch:user");
+    setNotice("Signed out.");
   }
 
   return (
-    <div className="appShell">
-      {loading ? (
-        <div className="loadingOverlay" aria-label="Loading">
-          <div className="spinner" />
+    <main className="app-shell">
+      <AppHeader user={user} onSignOut={signOut} />
+      {notice && <div className="notice">{notice}</div>}
+
+      {page === "auth" && (
+        <AuthPage
+          mode={mode}
+          setMode={setMode}
+          authForm={authForm}
+          updateAuthForm={updateAuthForm}
+          submitAuth={submitAuth}
+          busy={busy}
+        />
+      )}
+
+      {page === "upload" && (
+        <UploadPage
+          profile={profile}
+          updateProfile={updateProfile}
+          resumeFile={resumeFile}
+          setResumeFile={setResumeFile}
+          analyzeResume={analyzeResume}
+          busy={busy}
+          user={user}
+          jobs={jobs}
+          refreshLiveJobs={refreshLiveJobs}
+          analyzeProfileOnly={analyzeProfileOnly}
+        />
+      )}
+
+      {page === "results" && (
+        <ResultsPage
+          topMatch={topMatch}
+          parseResult={parseResult}
+          matchResult={matchResult}
+          resumeFile={resumeFile}
+          onBack={() => setPage("upload")}
+          onOpenLearning={() => setPage("learning")}
+        />
+      )}
+
+      {page === "learning" && (
+        <LearningPage
+          matchResult={matchResult}
+          topMatch={topMatch}
+          onBack={() => setPage("results")}
+          onUpload={() => setPage("upload")}
+        />
+      )}
+    </main>
+  );
+}
+
+function AppHeader({ user, onSignOut }) {
+  return (
+    <header className="app-topbar">
+      <div>
+        <p className="eyebrow">AI career assistant</p>
+        <h1>Smart Job Matching</h1>
+      </div>
+      {user && (
+        <div className="header-actions">
+          <button className="secondary-button compact-button" onClick={onSignOut}>
+            Sign out
+          </button>
         </div>
-      ) : null}
+      )}
+    </header>
+  );
+}
 
-      {!user ? (
-        <div className="loginWrap">
-          <div className="loginHero">
-            <div className="brand" style={{ marginBottom: 10 }}>
-              <div className="logo" style={{ width: 52, height: 52, borderRadius: 18 }}>
-                AI
-              </div>
-              <div>
-                <div style={{ fontSize: 28, fontWeight: 1000, letterSpacing: "-0.4px" }}>
-                  AI Job Matching
-                </div>
-                <div className="subtitle" style={{ fontSize: 13 }}>
-                  SaaS dashboard for resumes, skill gaps, and interview prep.
-                </div>
-              </div>
-            </div>
-            <div className="heroPoints">
-              <div className="heroPoint">
-                <div className="heroIcon">01</div>
-                <div>
-                  <b>Semantic matching</b>
-                  <div className="muted" style={{ marginTop: 4 }}>
-                    Resume vs job descriptions using embeddings.
-                  </div>
-                </div>
-              </div>
-              <div className="heroPoint">
-                <div className="heroIcon">02</div>
-                <div>
-                  <b>Skill gap analysis</b>
-                  <div className="muted" style={{ marginTop: 4 }}>
-                    Identify missing skills and generate learning suggestions.
-                  </div>
-                </div>
-              </div>
-              <div className="heroPoint">
-                <div className="heroIcon">03</div>
-                <div>
-                  <b>Interview readiness</b>
-                  <div className="muted" style={{ marginTop: 4 }}>
-                    Role-based questions to help you prepare faster.
-                  </div>
-                </div>
-              </div>
+function AuthPage({ mode, setMode, authForm, updateAuthForm, submitAuth, busy }) {
+  return (
+    <section className="auth-page">
+      <div className="auth-hero">
+        <p className="eyebrow">Smart Job Matching + Career Assistant</p>
+        <h2>AI-Powered Smart Job Matching</h2>
+        <p>
+          A resume analysis platform that extracts skills, compares candidate
+          fit with job roles, highlights skill gaps, and suggests learning,
+          career, and interview guidance.
+        </p>
+        <div className="feature-strip">
+          <span>Resume parsing</span>
+          <span>Skill gap analysis</span>
+          <span>Career guidance</span>
+        </div>
+      </div>
+
+      <form className="panel auth-card stack" onSubmit={submitAuth}>
+        <div className="panel-heading">
+          <div>
+            <p className="eyebrow">Account</p>
+            <h2>{mode === "login" ? "Welcome back" : "Create account"}</h2>
+          </div>
+        </div>
+        <div className="segmented">
+          <button type="button" className={mode === "login" ? "active" : ""} onClick={() => setMode("login")}>
+            Login
+          </button>
+          <button type="button" className={mode === "register" ? "active" : ""} onClick={() => setMode("register")}>
+            Register
+          </button>
+        </div>
+        {mode === "register" && (
+          <label>
+            Full name
+            <input
+              name="fullName"
+              value={authForm.fullName}
+              onChange={updateAuthForm}
+              placeholder="Enter your full name"
+              required
+            />
+          </label>
+        )}
+        <label>
+          Email
+          <input
+            name="email"
+            type="email"
+            value={authForm.email}
+            onChange={updateAuthForm}
+            placeholder="Enter your email"
+            required
+          />
+        </label>
+        <label>
+          Password
+          <input
+            name="password"
+            type="password"
+            value={authForm.password}
+            onChange={updateAuthForm}
+            placeholder="Enter password"
+            minLength="6"
+            required
+          />
+        </label>
+        <button className="primary-button" disabled={Boolean(busy)}>
+          {busy || (mode === "login" ? "Continue to resume" : "Create account")}
+        </button>
+      </form>
+    </section>
+  );
+}
+
+function UploadPage({
+  profile,
+  updateProfile,
+  resumeFile,
+  setResumeFile,
+  analyzeResume,
+  busy,
+  user,
+  jobs,
+  refreshLiveJobs,
+  analyzeProfileOnly,
+}) {
+  return (
+    <section className="flow-page">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Resume workspace</p>
+          <h2>Build your candidate profile and upload your resume</h2>
+        </div>
+        {user && (
+          <div className="user-card slim-user-card">
+            <strong>{user.fullName}</strong>
+            <span>{user.email}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="upload-layout">
+        <form className="panel profile-panel" onSubmit={analyzeResume}>
+          <div className="panel-heading">
+            <div>
+              <p className="eyebrow">Candidate profile</p>
+              <h2>Profile Builder</h2>
             </div>
           </div>
-
-          <div className="card" style={{ padding: 18 }}>
-            <div className="row" style={{ marginBottom: 12 }}>
-              <button
-                className={`btn ${authTab === "login" ? "primaryBtn" : "secondaryBtn"}`}
-                type="button"
-                onClick={() => setAuthTab("login")}
-                disabled={loading}
-              >
-                Login
-              </button>
-              <button
-                className={`btn ${authTab === "register" ? "primaryBtn" : "secondaryBtn"}`}
-                type="button"
-                onClick={() => setAuthTab("register")}
-                disabled={loading}
-              >
-                Register
-              </button>
-            </div>
-
-            <form onSubmit={handleAuth} className="section">
-              {authTab === "register" ? (
-                <div className="field">
-                  <label>Full Name</label>
-                  <input
-                    className="input"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="e.g., Arya Gupta"
-                  />
-                </div>
-              ) : null}
-
-              <div className="field">
-                <label>Email</label>
-                <input
-                  className="input"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  type="email"
-                  placeholder="you@example.com"
-                />
-              </div>
-
-              <div className="field">
-                <label>Password</label>
-                <input
-                  className="input"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  type="password"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              <button className="btn primaryBtn" type="submit" disabled={!canSubmitAuth || loading}>
-                {loading ? "Please wait..." : authTab === "register" ? "Create Account" : "Login"}
-              </button>
-            </form>
-
-            {error ? (
-              <div className="error" role="alert">
-                {error}
-              </div>
-            ) : null}
-
-            <div className="muted" style={{ marginTop: 12, fontSize: 12, lineHeight: 1.6 }}>
-              Demo note: Profile and matching work even without MySQL/Mongo depending on backend availability.
-            </div>
+          <div className="profile-form">
+            <label>
+              Education
+              <input name="education" value={profile.education} onChange={updateProfile} />
+            </label>
+            <label>
+              Skills
+              <textarea name="skills" value={profile.skills} onChange={updateProfile} rows="3" />
+            </label>
+            <label>
+              Experience
+              <textarea name="experience" value={profile.experience} onChange={updateProfile} rows="4" />
+            </label>
+            <label>
+              Career preferences
+              <textarea name="careerPreferences" value={profile.careerPreferences} onChange={updateProfile} rows="3" />
+            </label>
           </div>
+          <button
+            type="button"
+            className="primary-button full-width profile-match-button"
+            onClick={analyzeProfileOnly}
+            disabled={Boolean(busy)}
+          >
+            {busy || "Find job roles from profile"}
+          </button>
+        </form>
+
+        <div className="side-stack">
+          <ResumeUploadCard
+            resumeFile={resumeFile}
+            setResumeFile={setResumeFile}
+            analyzeResume={analyzeResume}
+            busy={busy}
+          />
+          <AvailableJobsPanel jobs={jobs} refreshLiveJobs={refreshLiveJobs} busy={busy} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ResumeUploadCard({ resumeFile, setResumeFile, analyzeResume, busy }) {
+  return (
+    <form className="panel upload-panel" onSubmit={analyzeResume}>
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Resume upload</p>
+          <h2>Upload & analyze</h2>
+        </div>
+      </div>
+      <label className="drop-zone">
+        <span>{resumeFile ? resumeFile.name : "Choose resume file"}</span>
+        <small>PDF or DOCX, up to 10MB</small>
+        <input
+          type="file"
+          accept=".pdf,.doc,.docx"
+          onChange={(event) => setResumeFile(event.target.files?.[0] || null)}
+        />
+      </label>
+      <div className="upload-summary">
+        <span>Skills will be extracted from the resume.</span>
+        <span>Jobs are ranked against backend-managed roles.</span>
+        <span>Profile + resume are used for recommendations.</span>
+      </div>
+      <button className="primary-button full-width" disabled={Boolean(busy)}>
+        {busy || "Analyze resume"}
+      </button>
+    </form>
+  );
+}
+
+function AvailableJobsPanel({ jobs, refreshLiveJobs, busy }) {
+  return (
+    <section className="panel jobs-panel">
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Available roles</p>
+          <h2>Backend-managed jobs</h2>
+        </div>
+        <button
+          type="button"
+          className="secondary-button compact-button"
+          onClick={refreshLiveJobs}
+          disabled={Boolean(busy)}
+        >
+          Refresh live jobs
+        </button>
+      </div>
+      <div className="job-list">
+        {list(jobs).map((job) => (
+          <article className="job-card" key={job.id || job.title}>
+            <strong>{job.title}</strong>
+            {(job.company || job.location || job.source) && (
+              <small>
+                {[job.company, job.location, job.source].filter(Boolean).join(" - ")}
+              </small>
+            )}
+            <span>{list(job.requiredSkills).join(", ") || "No skills listed"}</span>
+          </article>
+        ))}
+        {!list(jobs).length && <p className="empty">No jobs available yet.</p>}
+      </div>
+    </section>
+  );
+}
+
+function ResultsPage({ topMatch, parseResult, matchResult, resumeFile, onBack, onOpenLearning }) {
+  const breakdown = matchResult?.scoreBreakdown || {};
+  const chartItems = [
+    ["Semantic match", breakdown.semanticMatch],
+    ["Skills match", breakdown.skillsMatch],
+    ["Experience match", breakdown.experienceMatch],
+  ];
+
+  return (
+    <section className="results-page">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Analysis results</p>
+          <h2>{topMatch ? topMatch.title : "Resume analysis"}</h2>
+          <p className="page-copy">
+            {resumeFile ? resumeFile.name : parseResult?.fileName || "Candidate profile match"}
+          </p>
+        </div>
+        <div className="result-actions">
+          {topMatch && <span className="score-pill">{scorePercent(topMatch.score)}%</span>}
+          <button className="secondary-button compact-button" onClick={onBack}>Upload another</button>
+        </div>
+      </div>
+
+      <div className="result-grid results-grid-wide">
+        <ChartBlock title="Match score breakdown" items={chartItems} />
+        <ChartBlock title="Skill gap chart" items={list(matchResult?.skillGaps).map((skill) => [skill, 1])} inverse />
+        <ResultBlock title="Top matches" items={list(matchResult?.matches).map((match) => `${match.title} - ${scorePercent(match.score)}%`)} />
+        <ResultBlock title="Extracted skills" items={list(matchResult?.extractedSkills || parseResult?.extractedSkills)} chip />
+        <ResultBlock title="Skill gaps" items={list(matchResult?.skillGaps)} chip />
+        <ResultBlock title="Learning suggestions" items={list(matchResult?.learningSuggestions)} />
+        <ResultBlock title="Career path" items={list(matchResult?.careerRecommendations)} />
+        <ResultBlock title="Interview prep" items={list(matchResult?.interviewQuestions)} />
+      </div>
+
+      <div className="learning-open-panel">
+        <button className="primary-button learning-open-button" onClick={onOpenLearning}>
+          Open
+        </button>
+        <p>
+          Learning paths for your current skill gaps with YouTube videos, free notes,
+          and course-platform options based on this candidate analysis.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function LearningPage({ matchResult, topMatch, onBack, onUpload }) {
+  const skillGaps = list(matchResult?.skillGaps);
+  const suggestions = list(matchResult?.learningSuggestions);
+
+  return (
+    <section className="learning-page">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Personalized learning path</p>
+          <h2>{topMatch ? `Improve for ${topMatch.title}` : "Learning options"}</h2>
+          <p className="page-copy">
+            Resources are generated from the skill gaps found in the current candidate result.
+          </p>
+        </div>
+        <div className="result-actions">
+          <button className="secondary-button compact-button" onClick={onBack}>Back to results</button>
+          <button className="secondary-button compact-button" onClick={onUpload}>New analysis</button>
+        </div>
+      </div>
+
+      {skillGaps.length ? (
+        <div className="learning-grid">
+          {skillGaps.map((skill) => (
+            <section className="learning-skill-card" key={skill}>
+              <div className="learning-skill-heading">
+                <p className="eyebrow">Skill gap</p>
+                <h3>{skill}</h3>
+              </div>
+              <div className="learning-option-list">
+                {learningOptionsFor(skill, suggestions).map((option) => (
+                  <a
+                    className="learning-option"
+                    href={option.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    key={`${skill}-${option.type}`}
+                  >
+                    <span>{option.type}</span>
+                    <strong>{option.title}</strong>
+                    <small>{option.detail}</small>
+                  </a>
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
       ) : (
-        <div className="dashboardLayout">
-          <aside className="sidebar">
-            <div className="sidebarTop">
-              <div className="logoSmall">AI</div>
-              <div>
-                <div className="sidebarBrand">JobMatch</div>
-                <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
-                  Dashboard
-                </div>
-              </div>
-            </div>
-
-            <nav className="nav">
-              <button
-                className={`navItem ${activePage === "profile" ? "active" : ""}`}
-                onClick={() => setActivePage("profile")}
-                type="button"
-              >
-                Profile
-              </button>
-              <button
-                className={`navItem ${activePage === "match" ? "active" : ""}`}
-                onClick={() => setActivePage("match")}
-                type="button"
-              >
-                Resume Matching
-              </button>
-              <button
-                className={`navItem ${activePage === "results" ? "active" : ""}`}
-                onClick={() => setActivePage("results")}
-                type="button"
-              >
-                Results
-              </button>
-            </nav>
-
-            <div className="sidebarFooter">
-              Upload your resume, get top roles, and receive skill gaps + learning suggestions in one place.
-            </div>
-          </aside>
-
-          <div className="dashboardMain">
-            <header className="dashboardHeader">
-              <div>
-                <h2 className="dashboardTitle">
-                  {activePage === "profile"
-                    ? "User Profile"
-                    : activePage === "match"
-                      ? "Resume Matching"
-                      : "Matching Results"}
-                </h2>
-                <div className="dashboardSubtitle">
-                  {activePage === "profile"
-                    ? "Education, skills, and career preferences."
-                    : activePage === "match"
-                      ? "Upload a resume (PDF/DOCX) to get role recommendations."
-                      : "Top matches, skill gaps, learning suggestions, and interview prep."}
-                </div>
-              </div>
-
-              <div className="headerUser">
-                <div className="userPill">
-                  {user.fullName} ({user.email})
-                </div>
-                <button className="btn secondaryBtn" type="button" onClick={handleLogout}>
-                  Logout
-                </button>
-              </div>
-            </header>
-
-            <main className="dashboardContent">
-              <div className="fadeInUp">
-                {error ? (
-                  <div className="error" role="alert">
-                    {error}
-                  </div>
-                ) : null}
-
-                {activePage === "profile" ? (
-                  <div className="card">
-                    <div className="sectionTitle" style={{ marginBottom: 6 }}>
-                      Profile Details
-                    </div>
-
-                    <form onSubmit={handleSaveProfile}>
-                      <div className="grid2">
-                        <div className="field">
-                          <label>Education</label>
-                          <textarea
-                            className="textarea"
-                            value={profileForm.education}
-                            onChange={(e) =>
-                              setProfileForm((p) => ({ ...p, education: e.target.value }))
-                            }
-                            rows={3}
-                            placeholder="e.g., B.Tech in CSE, 2022-2026"
-                          />
-                        </div>
-
-                        <div className="field">
-                          <label>Skills (comma-separated)</label>
-                          <textarea
-                            className="textarea"
-                            value={profileForm.skills}
-                            onChange={(e) =>
-                              setProfileForm((p) => ({ ...p, skills: e.target.value }))
-                            }
-                            rows={3}
-                            placeholder="e.g., Java, Spring Boot, React, MySQL"
-                          />
-                        </div>
-
-                        <div className="field">
-                          <label>Experience</label>
-                          <textarea
-                            className="textarea"
-                            value={profileForm.experience}
-                            onChange={(e) =>
-                              setProfileForm((p) => ({ ...p, experience: e.target.value }))
-                            }
-                            rows={3}
-                            placeholder="e.g., Internship / projects / roles"
-                          />
-                        </div>
-
-                        <div className="field">
-                          <label>Career Preferences</label>
-                          <textarea
-                            className="textarea"
-                            value={profileForm.careerPreferences}
-                            onChange={(e) =>
-                              setProfileForm((p) => ({ ...p, careerPreferences: e.target.value }))
-                            }
-                            rows={2}
-                            placeholder="e.g., Backend Developer, NLP Engineer"
-                          />
-                        </div>
-                      </div>
-
-                      <button className="btn primaryBtn" type="submit" disabled={loading || profileLoading}>
-                        {loading ? "Saving..." : profileLoading ? "Saving..." : "Save Profile"}
-                      </button>
-                    </form>
-                  </div>
-                ) : null}
-
-                {activePage === "match" ? (
-                  <div className="card">
-                    <div className="sectionTitle" style={{ marginBottom: 6 }}>
-                      Upload Resume
-                    </div>
-                    <form onSubmit={handleMatch}>
-                      <div className="field">
-                        <label>Resume (PDF/DOCX)</label>
-                        <input
-                          className="input"
-                          type="file"
-                          accept=".pdf,.docx"
-                          onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
-                        />
-                      </div>
-
-                      <button className="btn primaryBtn" type="submit" disabled={!resumeFile || loading}>
-                        {loading ? "Matching..." : "Match Jobs"}
-                      </button>
-                    </form>
-
-                    <div className="infoBanner">
-                      <div className="infoDot" />
-                      <div>
-                        Your resume will be parsed for skills. Matching uses semantic similarity (embeddings) and returns skill gaps + career guidance.
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-
-                {activePage === "results" ? (
-                  <div className="card">
-                    <div className="sectionTitle" style={{ marginBottom: 6 }}>
-                      Results Summary
-                    </div>
-
-                    {!result ? (
-                      <div className="muted">No results yet. Go to “Resume Matching” and upload a resume.</div>
-                    ) : (
-                      <div>
-                        <div className="section">
-                          <h2 className="sectionTitle">Top Matches</h2>
-                          <div className="matchGrid">
-                            {result.matches?.map((m) => (
-                              <div key={m.title} className="matchCard">
-                                <div className="matchTitle">{m.title}</div>
-                                <div className="scorePill">Score: {m.score.toFixed(4)}</div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="section">
-                          <h2 className="sectionTitle">Extracted Skills</h2>
-                          {result.extractedSkills?.length ? (
-                            <div className="chipWrap">
-                              {result.extractedSkills.map((s) => (
-                                <span key={s} className="chip">
-                                  {s}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="muted">No skills extracted.</div>
-                          )}
-                        </div>
-
-                        <div className="section">
-                          <h2 className="sectionTitle">Skill Gaps</h2>
-                          {result.skillGaps?.length ? (
-                            <div className="chipWrap">
-                              {result.skillGaps.map((g) => (
-                                <span key={g} className="chip chipNeutral">
-                                  {g}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="muted">No major gaps found in the extracted skills.</div>
-                          )}
-                        </div>
-
-                        <div className="section">
-                          <h2 className="sectionTitle">Learning Suggestions</h2>
-                          {result.learningSuggestions?.length ? (
-                            <ul className="list">
-                              {result.learningSuggestions.map((s, i) => (
-                                <li key={i}>{s}</li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <div className="muted">No suggestions available.</div>
-                          )}
-                        </div>
-
-                        {result.careerRecommendations?.length ? (
-                          <div className="section">
-                            <h2 className="sectionTitle">Career Recommendations</h2>
-                            <ul className="list">
-                              {result.careerRecommendations.map((s, i) => (
-                                <li key={i}>{s}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        ) : null}
-
-                        {result.interviewQuestions?.length ? (
-                          <div className="section">
-                            <h2 className="sectionTitle">Interview Preparation</h2>
-                            <ul className="list">
-                              {result.interviewQuestions.map((q, i) => (
-                                <li key={i}>{q}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        ) : null}
-                      </div>
-                    )}
-                  </div>
-                ) : null}
-              </div>
-            </main>
-          </div>
+        <div className="panel learning-empty">
+          <h3>No skill gaps found</h3>
+          <p className="empty">
+            This analysis did not return missing skills. Run another resume or profile match to build a learning path.
+          </p>
         </div>
+      )}
+    </section>
+  );
+}
+
+function ChartBlock({ title, items, inverse = false }) {
+  const chartItems = list(items);
+  return (
+    <div className="result-block chart-block">
+      <h3>{title}</h3>
+      {chartItems.length ? chartItems.map(([label, rawValue]) => {
+        const value = inverse ? 1 : Number(rawValue || 0);
+        const percent = inverse ? 100 : scorePercent(value);
+        return (
+          <div className="chart-row" key={label}>
+            <div className="chart-label">
+              <span>{label}</span>
+              <strong>{inverse ? "Gap" : `${percent}%`}</strong>
+            </div>
+            <div className="bar-track">
+              <span style={{ width: `${Math.max(10, percent)}%` }} />
+            </div>
+          </div>
+        );
+      }) : (
+        <p className="empty">No chart data yet</p>
       )}
     </div>
   );
 }
 
+function ResultBlock({ title, items, chip = false }) {
+  return (
+    <div className="result-block">
+      <h3>{title}</h3>
+      {items.length ? (
+        <div className={chip ? "chip-list" : "text-list"}>
+          {items.map((item) => (
+            <span key={item}>{item}</span>
+          ))}
+        </div>
+      ) : (
+        <p className="empty">No data yet</p>
+      )}
+    </div>
+  );
+}
+
+export default App;

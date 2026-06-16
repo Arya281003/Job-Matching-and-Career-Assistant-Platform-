@@ -1,18 +1,17 @@
 {
-  "Java Backend Developer": [
-    "Backend Developer Track: build REST APIs with Spring Boot and production-ready practices.",
-    "System Design Focus: learn pagination, caching, and database indexing.",
-    "Portfolio Ideas: build an AI-enabled job matching API with resume parsing."
-  ],
-  "Frontend Developer (React)": [
-    "Frontend Developer Track: build responsive UIs and integrate with REST APIs.",
-    "State Management Focus: hooks, form handling, and file upload flows.",
-    "Portfolio Ideas: add a resume upload + match results dashboard."
-  ],
-  "Data Scientist / NLP Engineer": [
-    "NLP Engineer Track: resume parsing, skill extraction (NER), and semantic matching with embeddings.",
-    "Evaluation Focus: cosine similarity, ranking metrics, and error analysis.",
-    "Portfolio Ideas: create a learning-path generator and job recommendation demo."
-  ]
+  "Java Backend Developer": ["Junior Backend Developer", "Spring Boot Developer", "API Engineer", "Senior Backend Engineer"],
+  "Frontend Developer (React)": ["Junior Frontend Developer", "React Developer", "UI Engineer", "Frontend Lead"],
+  "Full Stack Developer": ["Full Stack Intern", "MERN/Java Full Stack Developer", "Product Engineer", "Solution Engineer"],
+  "Data Scientist / NLP Engineer": ["Data Science Intern", "NLP Engineer", "Applied ML Engineer", "AI Research Engineer"],
+  "Machine Learning Engineer": ["ML Intern", "ML Engineer", "MLOps Engineer", "Applied AI Engineer"],
+  "Data Analyst": ["Data Analyst Intern", "Business Analyst", "BI Developer", "Analytics Consultant"],
+  "DevOps Engineer": ["DevOps Intern", "Build and Release Engineer", "Cloud DevOps Engineer", "Site Reliability Engineer"],
+  "Cloud Engineer": ["Cloud Support Associate", "Cloud Engineer", "Cloud Solutions Architect", "Platform Engineer"],
+  "QA Automation Engineer": ["QA Intern", "Automation Tester", "SDET", "QA Lead"],
+  "Cybersecurity Analyst": ["Security Analyst Intern", "SOC Analyst", "Application Security Analyst", "Security Engineer"],
+  "Database Developer": ["SQL Developer", "Database Engineer", "Data Platform Engineer", "Database Administrator"],
+  "Mobile App Developer": ["Mobile Developer Intern", "React Native Developer", "Mobile App Engineer", "Mobile Tech Lead"],
+  "Product Analyst": ["Product Analyst Intern", "Growth Analyst", "Product Operations Analyst", "Product Manager"],
+  "AI Application Developer": ["AI App Developer", "LLM Application Developer", "AI Product Engineer", "AI Solutions Engineer"],
+  "Technical Support Engineer": ["Technical Support Associate", "Application Support Engineer", "Customer Success Engineer", "Solutions Engineer"]
 }
-

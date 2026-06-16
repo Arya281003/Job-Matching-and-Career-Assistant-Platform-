@@ -14,6 +14,12 @@ public class JobDocument {
   private String title;
   private String description;
   private List<String> requiredSkills;
+  private String company;
+  private String location;
+  private String source;
+  private String externalId;
+  private String url;
+  private String publishedAt;
 
   public String getId() {
     return id;
@@ -41,6 +47,54 @@ public class JobDocument {
 
   public void setRequiredSkills(List<String> requiredSkills) {
     this.requiredSkills = requiredSkills;
+  }
+
+  public String getCompany() {
+    return company;
+  }
+
+  public void setCompany(String company) {
+    this.company = company;
+  }
+
+  public String getLocation() {
+    return location;
+  }
+
+  public void setLocation(String location) {
+    this.location = location;
+  }
+
+  public String getSource() {
+    return source;
+  }
+
+  public void setSource(String source) {
+    this.source = source;
+  }
+
+  public String getExternalId() {
+    return externalId;
+  }
+
+  public void setExternalId(String externalId) {
+    this.externalId = externalId;
+  }
+
+  public String getUrl() {
+    return url;
+  }
+
+  public void setUrl(String url) {
+    this.url = url;
+  }
+
+  public String getPublishedAt() {
+    return publishedAt;
+  }
+
+  public void setPublishedAt(String publishedAt) {
+    this.publishedAt = publishedAt;
   }
 }
 

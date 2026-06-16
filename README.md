@@ -1,79 +1,136 @@
 # AI-Powered Smart Job Matching + Career Assistant
 
-This project is built on the tech stack described in your PPT:
+A full-stack job matching platform that parses resumes, extracts skills, compares candidates with job roles, identifies skill gaps, and generates learning/career/interview guidance.
 
-- Frontend: React (React + HTML/CSS)
-- Backend: Java Spring Boot
-- AI & NLP: Python (spaCy + BERT-style embeddings)
-- Database: MySQL + MongoDB
+## Tech Stack
 
-## Folder structure
+- **Frontend:** React + Vite
+- **Backend:** Java Spring Boot REST API
+- **NLP Service:** Python FastAPI, spaCy, sentence-transformers, NumPy
+- **Relational Database:** MySQL for users, authentication, and profiles
+- **Document Database:** MongoDB for jobs, resumes, and saved analysis results
+- **Authentication:** JWT bearer tokens
+
+## Core Features
+
+- Login/register with JWT authentication
+- Profile creation and persistence in MySQL
+- Resume upload and text extraction from PDF/DOCX
+- Skill extraction using an extensible skill ontology
+- Semantic job matching using sentence-transformer embeddings with lexical fallback
+- Match score breakdown: semantic match, skills match, and experience match
+- Skill gap analysis with learning suggestions
+- Career path recommendations and interview questions
+- MongoDB persistence for resumes, jobs, and analysis history
+- Backend job-management endpoints for adding/editing/deleting roles
+- Evaluation benchmark for Top-1, Top-3, MRR, skill precision, and skill recall
+
+## Architecture
+
+```text
+React Frontend
+    |
+    | REST + JWT
+    v
+Spring Boot Backend
+    |             |
+    |             +-- MySQL: users and profiles
+    |             +-- MongoDB: jobs, resumes, analyses
+    |
+    | REST
+    v
+FastAPI NLP Service
+    |
+    +-- Resume parsing
+    +-- Skill extraction
+    +-- Semantic matching
+    +-- Score breakdowns
+```
+
+## Folder Structure
 
 - `frontend/` - React UI
 - `backend/` - Spring Boot REST API
-- `nlp-service/` - Python NLP microservice (resume parsing, skill extraction, job matching)
+- `nlp-service/` - Python NLP microservice and evaluation benchmark
+- `nlp-service/evaluation_dataset.csv` - labeled benchmark dataset
+- `nlp-service/evaluate.py` - evaluation script
+- `.env.example` - example environment variables
 
-## Local setup (quick start)
+## Database Design
 
-### 1) Start databases
+The project uses two databases:
 
-#### Option A: Using Docker (recommended if available)
+- **MySQL** stores relational data:
+  - users
+  - password hashes
+  - profiles
 
-If Docker Desktop is installed and your Docker CLI works:
+- **MongoDB** stores document data:
+  - job descriptions
+  - uploaded resume text
+  - extracted skills
+  - saved analysis results
+
+## Sample Data
+
+The project includes:
+
+- 15 seeded job roles
+- 66 skills in the skill ontology
+- 32 learning suggestions
+- 15 career-role mappings
+- 75 interview questions
+- 75 labeled benchmark resume samples for evaluation
+
+## Local Setup
+
+### 1. Start Databases
+
+If Docker Desktop is available:
 
 ```bash
 docker compose up -d
 ```
 
-MySQL: `jobmatch_db` (port `3306`)
+MySQL defaults:
 
-MongoDB: database used by the Spring Boot config (port `27017`)
+- Database: `jobmatch_db`
+- Port: `3306`
+- User: `jobmatch`
+- Password: `jobmatchpassword`
 
-#### Option B: No Docker (run DBs locally)
+MongoDB defaults:
 
-1. Install and start **MySQL 8** on port `3306`
-2. Create:
-   - Database: `jobmatch_db`
-   - User: `jobmatch`
-   - Password: `jobmatchpassword`
-3. Install and start **MongoDB** on port `27017`
-4. MongoDB DB name expected by the app is `jobmatch_db` (it can be created automatically on first write).
+- Database: `jobmatch_db`
+- Port: `27017`
 
-## Demo mode (run without MySQL/Mongo right now)
+If you run databases manually, make sure MySQL and MongoDB use the same ports and credentials.
 
-If you just want to run the project UI + matching logic without setting up MySQL/Mongo:
-
-- The backend defaults to **in-memory H2** for login/profile (so MySQL is not required).
-- If MongoDB is not running, job matching falls back to a small built-in job set.
-
-So you can skip the DB setup and do steps 2-4 below.
-
-### 2) Start Python NLP service
+### 2. Start NLP Service
 
 ```bash
 cd nlp-service
 python -m venv .venv
 ./.venv/Scripts/activate
 pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-If spaCy model is not installed, run:
+For faster local startup without transformer embeddings:
 
 ```bash
-python -m spacy download en_core_web_sm
+$env:NLP_USE_TRANSFORMER="false"
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-### 3) Start Spring Boot backend
+### 3. Start Backend
 
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-If `mvn` is not recognized, install **Apache Maven** and ensure it’s added to PATH (Java is already required).
-
-### 4) Start React frontend
+### 4. Start Frontend
 
 ```bash
 cd frontend
@@ -81,12 +138,67 @@ npm install
 npm run dev
 ```
 
-Frontend runs on `http://localhost:5173` by default.
+Open:
 
-## What you can demo
+```text
+http://localhost:5173
+```
 
-- Register/Login (simple demo flow stored in MySQL)
-- Upload a resume to extract skills (NLP service)
-- Match candidate resume with job descriptions (NLP service)
-- Display skill gaps + learning path suggestions
+## Evaluation
 
+The project does not claim fake accuracy. It includes a labeled benchmark dataset and reports measurable metrics.
+
+Run fast lexical evaluation:
+
+```bash
+cd nlp-service
+python evaluate.py
+```
+
+Run transformer-based evaluation:
+
+```bash
+cd nlp-service
+python evaluate.py --use-transformer
+```
+
+Metrics reported:
+
+- **Top-1 Accuracy:** correct role is ranked first
+- **Top-3 Accuracy:** correct role appears in the top 3
+- **Mean Reciprocal Rank:** ranking quality across predictions
+- **Skill Precision:** extracted skills that are correct
+- **Skill Recall:** expected skills that were found
+
+Use the printed metrics in your report instead of guessing an accuracy rate.
+
+## Professional Positioning
+
+This project is best described as:
+
+> An AI-assisted resume-to-job matching platform that combines semantic embeddings, skill ontology matching, skill-gap analysis, and a full-stack production-style architecture.
+
+It is suitable for portfolio/job interviews because it demonstrates:
+
+- full-stack engineering
+- API design
+- JWT authentication
+- relational + document database modeling
+- NLP/ML integration
+- evaluation metrics
+- clean UI workflow
+- realistic system architecture
+
+## What You Can Demo
+
+- Register/login
+- Create a candidate profile
+- Upload a resume
+- View extracted skills
+- View match score breakdown
+- View top job matches
+- View skill gaps
+- View learning suggestions
+- View career path recommendations
+- View interview questions
+- Discuss evaluation metrics from `evaluate.py`

@@ -9,6 +9,7 @@ public class NlpMatchResponse {
   private List<String> learningSuggestions;
   private List<String> careerRecommendations;
   private List<String> interviewQuestions;
+  private ScoreBreakdown scoreBreakdown;
 
   public List<JobMatch> getTopMatches() {
     return topMatches;
@@ -56,6 +57,14 @@ public class NlpMatchResponse {
 
   public void setInterviewQuestions(List<String> interviewQuestions) {
     this.interviewQuestions = interviewQuestions;
+  }
+
+  public ScoreBreakdown getScoreBreakdown() {
+    return scoreBreakdown;
+  }
+
+  public void setScoreBreakdown(ScoreBreakdown scoreBreakdown) {
+    this.scoreBreakdown = scoreBreakdown;
   }
 }
 

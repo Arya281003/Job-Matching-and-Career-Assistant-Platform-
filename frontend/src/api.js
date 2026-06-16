@@ -1,73 +1,70 @@
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
-export async function registerUser({ email, password, fullName }) {
-  const res = await fetch(`${API_BASE}/api/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password, fullName })
-  });
-  const body = await res.text();
-  if (!res.ok) throw new Error(body || "Registration failed");
-  return JSON.parse(body);
+let authToken = "";
+
+export function setAuthToken(token) {
+  authToken = token || "";
 }
 
-export async function loginUser({ email, password }) {
-  const res = await fetch(`${API_BASE}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  });
-  const body = await res.text();
-  if (!res.ok) throw new Error(body || "Login failed");
-  return JSON.parse(body);
+function authHeaders(extra = {}) {
+  return authToken ? { ...extra, Authorization: `Bearer ${authToken}` } : extra;
 }
 
-export async function matchResume(file) {
+async function parseResponse(response) {
+  const contentType = response.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+  const body = isJson ? await response.json() : await response.text();
+
+  if (!response.ok) {
+    const message = typeof body === "string" && body.trim()
+      ? body
+      : `Request failed with status ${response.status}`;
+    throw new Error(message);
+  }
+
+  return body;
+}
+
+async function postJson(path, payload) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    headers: authHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify(payload),
+  });
+  return parseResponse(response);
+}
+
+async function getJson(path) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: authHeaders(),
+  });
+  return parseResponse(response);
+}
+
+async function postResume(path, file, userId) {
   const formData = new FormData();
   formData.append("resume", file);
-
-  const res = await fetch(`${API_BASE}/api/matches`, {
-    method: "POST",
-    body: formData
-  });
-  const body = await res.text();
-  if (!res.ok) throw new Error(body || "Matching failed");
-  return JSON.parse(body);
-}
-
-export async function getProfile(userId) {
-  const res = await fetch(`${API_BASE}/api/profile/${userId}`);
-  const body = await res.text();
-  if (!res.ok) {
-    if (res.status === 404) return null;
-    // body may be JSON from Spring. Extract a friendlier message if possible.
-    try {
-      const json = JSON.parse(body);
-      const msg = json?.message || json?.error || `Request failed (${res.status})`;
-      throw new Error(msg);
-    } catch {
-      throw new Error(body || `Request failed (${res.status})`);
-    }
+  if (userId) {
+    formData.append("userId", userId);
   }
-  return JSON.parse(body);
-}
 
-export async function upsertProfile({ userId, education, skills, experience, careerPreferences }) {
-  const res = await fetch(`${API_BASE}/api/profile`, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, education, skills, experience, careerPreferences })
+    headers: authHeaders(),
+    body: formData,
   });
-  const body = await res.text();
-  if (!res.ok) {
-    try {
-      const json = JSON.parse(body);
-      const msg = json?.message || json?.error || `Request failed (${res.status})`;
-      throw new Error(msg);
-    } catch {
-      throw new Error(body || `Request failed (${res.status})`);
-    }
-  }
-  return JSON.parse(body);
+  return parseResponse(response);
 }
 
+export const api = {
+  login: (payload) => postJson("/api/auth/login", payload),
+  register: (payload) => postJson("/api/auth/register", payload),
+  getProfile: (userId) => getJson(`/api/profile/${userId}`),
+  saveProfile: (payload) => postJson("/api/profile", payload),
+  matchProfile: (payload) => postJson("/api/matches/profile", payload),
+  parseResume: (file) => postResume("/api/resumes/parse", file),
+  matchResume: (file, userId) => postResume("/api/matches", file, userId),
+  listJobs: () => getJson("/api/jobs"),
+  importLiveJobs: (query = "software") => postJson(`/api/jobs/import/live?query=${encodeURIComponent(query)}`, {}),
+  listAnalyses: () => getJson("/api/analyses"),
+};

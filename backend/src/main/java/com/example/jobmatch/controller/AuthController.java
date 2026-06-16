@@ -13,6 +13,7 @@ import com.example.jobmatch.dto.LoginRequest;
 import com.example.jobmatch.dto.RegisterRequest;
 import com.example.jobmatch.model.User;
 import com.example.jobmatch.repository.UserRepository;
+import com.example.jobmatch.service.JwtService;
 
 import jakarta.validation.Valid;
 
@@ -22,10 +23,12 @@ public class AuthController {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
+  private final JwtService jwtService;
 
-  public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+  public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
+    this.jwtService = jwtService;
   }
 
   @PostMapping("/register")
@@ -42,7 +45,7 @@ public class AuthController {
     userRepository.save(user);
 
     return ResponseEntity.status(HttpStatus.CREATED).body(
-        new AuthResponse(user.getId(), user.getEmail(), user.getFullName()));
+        new AuthResponse(user.getId(), user.getEmail(), user.getFullName(), jwtService.createToken(user.getId(), user.getEmail())));
   }
 
   @PostMapping("/login")
@@ -57,7 +60,7 @@ public class AuthController {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
     }
 
-    return ResponseEntity.ok(new AuthResponse(user.getId(), user.getEmail(), user.getFullName()));
+    return ResponseEntity.ok(new AuthResponse(user.getId(), user.getEmail(), user.getFullName(), jwtService.createToken(user.getId(), user.getEmail())));
   }
 }
 

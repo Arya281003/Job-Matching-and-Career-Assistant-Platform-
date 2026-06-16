@@ -53,11 +53,12 @@ public class NlpClientService {
     return resp.getBody();
   }
 
-  public NlpMatchResponse matchJobs(String resumeText, java.util.List<NlpJobPayload> jobs) {
+  public NlpMatchResponse matchJobs(String resumeText, String profileText, java.util.List<NlpJobPayload> jobs) {
     String url = baseUrl + "/match-jobs";
 
     NlpMatchRequest req = new NlpMatchRequest();
     req.setResumeText(resumeText);
+    req.setProfileText(profileText);
     req.setJobs(jobs == null ? Collections.emptyList() : jobs);
 
     ResponseEntity<NlpMatchResponse> resp =

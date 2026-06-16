@@ -2,14 +2,14 @@ import io
 import json
 import os
 import re
-from typing import Dict, List, Optional
+import hashlib
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pdfplumber
 import spacy
 from fastapi import FastAPI, File, UploadFile
 from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer
 
 try:
     import docx  # python-docx
@@ -44,7 +44,6 @@ SKILL_ONTOLOGY: List[str] = _load_json(
         "BERT",
         "spaCy",
         "Machine Learning",
-        "Resume Parsing",
         "Security",
         "API Integration",
     ],
@@ -65,6 +64,8 @@ INTERVIEW_QUESTIONS: Dict[str, List[str]] = _load_json(
     default={},
 )
 
+IGNORED_SKILLS = {"resume parsing"}
+
 
 def normalize_text(text: str) -> str:
     text = text.lower()
@@ -76,6 +77,8 @@ def extract_skills_from_text(text: str) -> List[str]:
     norm = normalize_text(text)
     found: List[str] = []
     for skill in SKILL_ONTOLOGY:
+        if normalize_text(skill) in IGNORED_SKILLS:
+            continue
         s_norm = normalize_text(skill)
         if not s_norm:
             continue
@@ -125,12 +128,19 @@ class JobPayload(BaseModel):
 
 class MatchJobsRequest(BaseModel):
     resumeText: str
+    profileText: str = ""
     jobs: List[JobPayload]
 
 
 class TopMatch(BaseModel):
     title: str
     score: float
+
+
+class ScoreBreakdown(BaseModel):
+    semanticMatch: float
+    skillsMatch: float
+    experienceMatch: float
 
 
 class MatchJobsResponse(BaseModel):
@@ -140,12 +150,13 @@ class MatchJobsResponse(BaseModel):
     learningSuggestions: List[str]
     careerRecommendations: List[str]
     interviewQuestions: List[str]
+    scoreBreakdown: ScoreBreakdown
 
 
 app = FastAPI(title="NLP Job Matching Service")
 
 spacy_nlp: Optional[object] = None
-embedder: Optional[SentenceTransformer] = None
+embedder: Optional[Any] = None
 
 
 @app.on_event("startup")
@@ -157,8 +168,14 @@ def _startup():
     except Exception:
         spacy_nlp = spacy.blank("en")
 
-    # BERT-style semantic embeddings for similarity scoring.
-    embedder = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+    # BERT-style semantic embeddings are enabled by default. If the model is not
+    # cached or cannot load, the service falls back to lexical vectors.
+    if os.getenv("NLP_USE_TRANSFORMER", "true").lower() == "true":
+        try:
+            from sentence_transformers import SentenceTransformer
+            embedder = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+        except Exception:
+            embedder = None
 
 
 @app.post("/extract-skills")
@@ -184,20 +201,47 @@ def cosine_similarity_matrix(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     return np.dot(a_norm, b_norm.T).squeeze(0)
 
 
+def lexical_vector(text: str, dimensions: int = 384) -> np.ndarray:
+    vector = np.zeros(dimensions, dtype=float)
+    tokens = normalize_text(text).split()
+    for token in tokens:
+        digest = hashlib.sha256(token.encode("utf-8")).digest()
+        index = int.from_bytes(digest[:4], "big") % dimensions
+        vector[index] += 1.0
+    return vector
+
+
+def encode_texts(texts: List[str]) -> np.ndarray:
+    if not texts:
+        return np.zeros((0, 384), dtype=float)
+    if embedder is not None:
+        return embedder.encode(texts, normalize_embeddings=False)
+    return np.vstack([lexical_vector(text) for text in texts])
+
+
 @app.post("/match-jobs", response_model=MatchJobsResponse)
 def match_jobs(req: MatchJobsRequest):
-    if embedder is None:
-        raise RuntimeError("Sentence embedding model not loaded yet.")
-
     resume_text = req.resumeText or ""
+    profile_text = req.profileText or ""
+    candidate_text = "\n".join([resume_text, profile_text]).strip()
     jobs = req.jobs or []
+    if not jobs:
+        return {
+            "topMatches": [],
+            "extractedSkills": extract_skills_from_text(candidate_text),
+            "skillGaps": [],
+            "learningSuggestions": [],
+            "careerRecommendations": [],
+            "interviewQuestions": [],
+            "scoreBreakdown": {"semanticMatch": 0.0, "skillsMatch": 0.0, "experienceMatch": 0.0},
+        }
 
     job_descriptions = [j.description or "" for j in jobs]
     titles = [j.title for j in jobs]
     required_skills_by_job = [j.requiredSkills or [] for j in jobs]
 
-    resume_emb = embedder.encode([resume_text], normalize_embeddings=False)
-    jobs_emb = embedder.encode(job_descriptions, normalize_embeddings=False)
+    resume_emb = encode_texts([candidate_text])
+    jobs_emb = encode_texts(job_descriptions)
 
     sims = cosine_similarity_matrix(resume_emb, jobs_emb)
     # Rank by similarity score
@@ -208,7 +252,7 @@ def match_jobs(req: MatchJobsRequest):
         top_matches.append({"title": titles[idx], "score": float(sims[idx])})
 
     # Skill gap analysis: compare extracted skills vs required skills.
-    extracted_skills = extract_skills_from_text(resume_text)
+    extracted_skills = extract_skills_from_text(candidate_text)
     extracted_norm = {normalize_text(s) for s in extracted_skills}
 
     top_indices = [int(i) for i in ranked_idx[: min(3, len(ranked_idx))]]  # top 1..3
@@ -220,6 +264,8 @@ def match_jobs(req: MatchJobsRequest):
         job_required = required_skills_by_job[idx] if idx < len(required_skills_by_job) else []
         for rs in job_required or []:
             rs_norm = normalize_text(rs)
+            if rs_norm in IGNORED_SKILLS:
+                continue
             if rs_norm and rs_norm not in required_seen_norm:
                 required_seen_norm.add(rs_norm)
                 required_union_ordered.append(rs)
@@ -254,6 +300,19 @@ def match_jobs(req: MatchJobsRequest):
         if gaps:
             interview_questions.append(f"How will you close these skill gaps: {', '.join(gaps)}?")
 
+    semantic_match = float(sims[top_indices[0]]) if top_indices else 0.0
+    primary_required_norm = {normalize_text(s) for s in primary_required or [] if normalize_text(s) and normalize_text(s) not in IGNORED_SKILLS}
+    matched_required = primary_required_norm.intersection(extracted_norm)
+    skills_match = (len(matched_required) / len(primary_required_norm)) if primary_required_norm else 0.0
+    experience_keywords = ["experience", "built", "developed", "implemented", "project", "internship", "worked"]
+    experience_match = sum(1 for word in experience_keywords if word in normalize_text(candidate_text)) / len(experience_keywords)
+
+    if career_recommendations:
+        career_recommendations = [
+            f"Best-fit target: {primary_title}",
+            f"Profile-informed recommendation: strengthen {', '.join(gaps[:3]) if gaps else 'your strongest matched skills'}."
+        ] + career_recommendations
+
     return {
         "topMatches": top_matches,
         "extractedSkills": extracted_skills,
@@ -261,5 +320,10 @@ def match_jobs(req: MatchJobsRequest):
         "learningSuggestions": learning_suggestions,
         "careerRecommendations": career_recommendations,
         "interviewQuestions": interview_questions,
+        "scoreBreakdown": {
+            "semanticMatch": semantic_match,
+            "skillsMatch": float(skills_match),
+            "experienceMatch": float(experience_match),
+        },
     }
 

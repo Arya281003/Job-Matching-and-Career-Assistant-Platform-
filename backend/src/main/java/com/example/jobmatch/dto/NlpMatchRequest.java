@@ -4,6 +4,7 @@ import java.util.List;
 
 public class NlpMatchRequest {
   private String resumeText;
+  private String profileText;
   private List<NlpJobPayload> jobs;
 
   public String getResumeText() {
@@ -12,6 +13,14 @@ public class NlpMatchRequest {
 
   public void setResumeText(String resumeText) {
     this.resumeText = resumeText;
+  }
+
+  public String getProfileText() {
+    return profileText;
+  }
+
+  public void setProfileText(String profileText) {
+    this.profileText = profileText;
   }
 
   public List<NlpJobPayload> getJobs() {

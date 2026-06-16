@@ -1,20 +1,107 @@
 {
   "Java Backend Developer": [
-    "Explain REST API design and how you structure controllers/services/repositories.",
-    "What are common MySQL schema/indexing strategies you would use for performance?",
-    "How do you secure APIs (authentication, authorization, input validation)?",
-    "Describe a project where you used NLP/embeddings for matching or recommendations."
+    "Explain how you structure a Spring Boot project using controllers, services, and repositories.",
+    "How do you design REST APIs with proper status codes and validation?",
+    "What is dependency injection and why is it useful in Spring?",
+    "How would you secure APIs using JWT?",
+    "How do indexes improve MySQL query performance?"
   ],
   "Frontend Developer (React)": [
-    "How do you manage state in React (hooks vs global state approaches)?",
-    "How do you handle file uploads and API integration securely?",
-    "Describe a component architecture you used in a real app."
+    "Explain the difference between props and state in React.",
+    "How do hooks like useState and useEffect work?",
+    "How do you handle form validation and loading states in React?",
+    "What makes a UI responsive and accessible?",
+    "How do you integrate a React frontend with REST APIs?"
+  ],
+  "Full Stack Developer": [
+    "Walk through a full feature from frontend form to backend database save.",
+    "How do you debug API integration issues between React and Spring Boot?",
+    "How would you design authentication for a full-stack app?",
+    "Why might you use both MySQL and MongoDB in one project?",
+    "How do you deploy a multi-service application?"
   ],
   "Data Scientist / NLP Engineer": [
-    "How do embeddings help with semantic similarity for job matching?",
-    "Explain cosine similarity and why normalization matters.",
-    "How would you design an evaluation strategy for matching quality?",
-    "How would you extract skills from resumes using NLP (NER/rules/embeddings)?"
+    "How do embeddings help in semantic job matching?",
+    "Explain cosine similarity in simple terms.",
+    "How would you extract skills from resumes using NLP?",
+    "What are the limitations of keyword-based matching?",
+    "How would you evaluate the quality of a recommendation model?"
+  ],
+  "Machine Learning Engineer": [
+    "What is the difference between training, validation, and test data?",
+    "How do you detect overfitting?",
+    "How would you serve an ML model in production?",
+    "What metrics would you use for ranking or recommendation?",
+    "How do you monitor model performance after deployment?"
+  ],
+  "Data Analyst": [
+    "How would you clean and prepare messy data for analysis?",
+    "Explain joins in SQL with examples.",
+    "How do you choose the right chart for a dataset?",
+    "What is the difference between correlation and causation?",
+    "How would you explain insights to a non-technical audience?"
+  ],
+  "DevOps Engineer": [
+    "What problem does Docker solve?",
+    "Explain a basic CI/CD pipeline.",
+    "How do you monitor application health?",
+    "What is the difference between image and container?",
+    "How would you handle environment variables securely?"
+  ],
+  "Cloud Engineer": [
+    "What are the basic components of a cloud deployment?",
+    "How do security groups or firewalls protect services?",
+    "When would you use managed databases?",
+    "How do you scale a backend service?",
+    "What is the role of IAM in cloud security?"
+  ],
+  "QA Automation Engineer": [
+    "What is the difference between unit, integration, and end-to-end testing?",
+    "How do you write stable Selenium tests?",
+    "How would you test a resume upload feature?",
+    "What should be included in API testing?",
+    "How do you decide which tests to automate?"
+  ],
+  "Cybersecurity Analyst": [
+    "What is OWASP Top 10 and why does it matter?",
+    "How does password hashing differ from encryption?",
+    "How would you protect JWT tokens?",
+    "What are common API security risks?",
+    "How do you investigate a suspicious login pattern?"
+  ],
+  "Database Developer": [
+    "How do you design a normalized relational schema?",
+    "What are indexes and when can they hurt performance?",
+    "Explain one-to-many and many-to-many relationships.",
+    "How would you optimize a slow SQL query?",
+    "When would you choose MongoDB over MySQL?"
+  ],
+  "Mobile App Developer": [
+    "How do mobile apps communicate with backend APIs?",
+    "What is responsive design in mobile UI?",
+    "How do you manage state in a mobile application?",
+    "How would you handle offline or slow-network behavior?",
+    "What should you test before releasing a mobile app?"
+  ],
+  "Product Analyst": [
+    "How would you measure whether a feature is successful?",
+    "What is a funnel analysis?",
+    "How do you define product metrics?",
+    "How would you analyze user drop-off?",
+    "How do you present data-backed recommendations?"
+  ],
+  "AI Application Developer": [
+    "How would you build an AI feature into a full-stack app?",
+    "What are embeddings and vector search?",
+    "How do you handle fallback behavior when an AI model fails?",
+    "How would you evaluate an AI recommendation feature?",
+    "What are important privacy concerns for AI apps?"
+  ],
+  "Technical Support Engineer": [
+    "How do you troubleshoot a customer-reported issue?",
+    "What logs would you check when an API fails?",
+    "How do you explain a technical issue to a non-technical user?",
+    "How would you reproduce a bug consistently?",
+    "What SQL queries might help investigate user data problems?"
   ]
 }
-

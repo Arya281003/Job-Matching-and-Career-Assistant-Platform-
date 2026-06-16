@@ -1,9 +1,23 @@
-package com.example.jobmatch.dto;
+package com.example.jobmatch.model.mongo;
 
+import java.time.Instant;
 import java.util.List;
 
-public class MatchResponse {
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import com.example.jobmatch.dto.JobMatch;
+import com.example.jobmatch.dto.ScoreBreakdown;
+
+@Document(collection = "resume_analyses")
+public class AnalysisDocument {
+
+  @Id
+  private String id;
+
+  private Long userId;
   private String resumeId;
+  private String fileName;
   private List<JobMatch> matches;
   private List<String> extractedSkills;
   private List<String> skillGaps;
@@ -11,7 +25,19 @@ public class MatchResponse {
   private List<String> careerRecommendations;
   private List<String> interviewQuestions;
   private ScoreBreakdown scoreBreakdown;
-  private String analysisId;
+  private Instant createdAt;
+
+  public String getId() {
+    return id;
+  }
+
+  public Long getUserId() {
+    return userId;
+  }
+
+  public void setUserId(Long userId) {
+    this.userId = userId;
+  }
 
   public String getResumeId() {
     return resumeId;
@@ -19,6 +45,14 @@ public class MatchResponse {
 
   public void setResumeId(String resumeId) {
     this.resumeId = resumeId;
+  }
+
+  public String getFileName() {
+    return fileName;
+  }
+
+  public void setFileName(String fileName) {
+    this.fileName = fileName;
   }
 
   public List<JobMatch> getMatches() {
@@ -77,12 +111,11 @@ public class MatchResponse {
     this.scoreBreakdown = scoreBreakdown;
   }
 
-  public String getAnalysisId() {
-    return analysisId;
+  public Instant getCreatedAt() {
+    return createdAt;
   }
 
-  public void setAnalysisId(String analysisId) {
-    this.analysisId = analysisId;
+  public void setCreatedAt(Instant createdAt) {
+    this.createdAt = createdAt;
   }
 }
-

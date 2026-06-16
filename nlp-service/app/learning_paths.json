@@ -1,35 +1,36 @@
 {
-  "Java": [
-    "Java Programming Fundamentals (practice OOP + collections)",
-    "Build a small REST API in Java"
-  ],
-  "Spring Boot": [
-    "Spring Boot Basics: Controllers, Services, JPA",
-    "Add authentication (JWT) and error handling"
-  ],
-  "MySQL": [
-    "MySQL Fundamentals: schema design + indexing",
-    "Use JPA repositories and migrations"
-  ],
-  "MongoDB": [
-    "MongoDB Basics: documents, queries, aggregation",
-    "Model a Resume/Job catalog with Mongo"
-  ],
-  "React": [
-    "React Fundamentals: components, props/state, hooks",
-    "Build forms + file upload UI"
-  ],
-  "spaCy": [
-    "spaCy Essentials: pipelines, tokenization, NER basics",
-    "Create an entity rule-based skill extractor"
-  ],
-  "BERT": [
-    "BERT/Sentence Transformers: embeddings and similarity",
-    "Evaluate cosine similarity on job matching"
-  ],
-  "Machine Learning": [
-    "ML Basics: classification vs similarity matching",
-    "Prototype matching using embeddings"
-  ]
+  "Java": ["Revise OOP, collections, streams, exceptions, and build 3 console-to-API projects.", "Create a Spring Boot REST API with validation, services, repositories, and tests."],
+  "Spring Boot": ["Learn controllers, services, JPA, validation, exception handling, and configuration.", "Build a backend with login, profile, file upload, and job recommendation APIs."],
+  "REST": ["Practice HTTP methods, status codes, request validation, pagination, and error responses.", "Document APIs with sample requests and test them using Postman."],
+  "MySQL": ["Study schema design, joins, constraints, indexes, and query optimization.", "Create a project database with users, profiles, roles, and analysis history tables."],
+  "MongoDB": ["Learn document modeling, collections, indexes, aggregation, and schema design tradeoffs.", "Store resumes, jobs, extracted skills, and matching outputs as documents."],
+  "JWT": ["Learn token structure, signing, expiration, and bearer-token API protection.", "Implement login/register with JWT and protect all private endpoints."],
+  "Security": ["Study OWASP basics, password hashing, CORS, validation, and authorization.", "Add role-based access for admin job management."],
+  "React": ["Master components, props, state, hooks, forms, and conditional rendering.", "Build a multi-page resume upload and results dashboard."],
+  "JavaScript": ["Practice ES6 syntax, async/await, fetch, array methods, and modules.", "Write API clients and handle loading/error states professionally."],
+  "CSS": ["Learn responsive grids, spacing systems, focus states, and accessible UI styling.", "Polish the project for desktop, tablet, and mobile layouts."],
+  "Responsive Design": ["Practice mobile-first breakpoints, flexible grids, and text overflow handling.", "Test your UI at 390px, 780px, and desktop widths."],
+  "Python": ["Revise functions, classes, typing, file handling, FastAPI basics, and packages.", "Build text extraction and matching endpoints in FastAPI."],
+  "NLP": ["Learn tokenization, entity extraction, rule-based matching, embeddings, and evaluation.", "Improve resume skill extraction using spaCy patterns and skill dictionaries."],
+  "BERT": ["Learn transformer embeddings, semantic similarity, and sentence-transformers.", "Compare resumes and jobs using all-MiniLM-L6-v2 embeddings."],
+  "spaCy": ["Learn pipelines, tokenization, entity rulers, matchers, and custom components.", "Create a skill extractor using phrase matching and normalization."],
+  "Machine Learning": ["Study supervised vs unsupervised learning, metrics, train/test split, and bias.", "Add score breakdowns and evaluate matching quality with sample resumes."],
+  "Embeddings": ["Learn vector representations, cosine similarity, normalization, and ranking.", "Use embeddings to rank jobs semantically, not only by keyword overlap."],
+  "Scikit-learn": ["Practice preprocessing, model training, evaluation metrics, and pipelines.", "Prototype classification or ranking features for job recommendations."],
+  "Pandas": ["Learn data cleaning, filtering, grouping, joins, and CSV processing.", "Analyze job/resume datasets and generate sample reports."],
+  "NumPy": ["Practice arrays, vector math, normalization, and cosine similarity.", "Implement lightweight similarity scoring for offline fallback."],
+  "SQL": ["Practice SELECT, JOIN, GROUP BY, indexes, constraints, and transactions.", "Write queries for user analytics and profile completeness."],
+  "Power BI": ["Learn data modeling, measures, slicers, and dashboard layout.", "Create a dashboard showing match score distribution and skill gaps."],
+  "Docker": ["Learn images, containers, ports, volumes, and docker compose.", "Containerize backend, frontend, NLP service, MySQL, and MongoDB."],
+  "Kubernetes": ["Learn pods, deployments, services, config maps, and scaling basics.", "Deploy a simplified version of the app to a local Kubernetes cluster."],
+  "CI/CD": ["Learn build pipelines, tests, artifacts, and deployment steps.", "Create GitHub Actions for frontend build and backend test."],
+  "AWS": ["Learn EC2, RDS, S3, IAM, security groups, and deployment basics.", "Deploy backend and databases in a cloud-ready architecture."],
+  "Testing": ["Study unit, integration, API, and UI testing strategies.", "Add backend service tests and frontend component flow tests."],
+  "Selenium": ["Learn browser automation, locators, waits, and test assertions.", "Automate login, resume upload, and results page checks."],
+  "Postman": ["Practice collections, environments, auth headers, and API tests.", "Create a Postman collection for all backend endpoints."],
+  "Cybersecurity": ["Study authentication, authorization, logging, vulnerabilities, and secure storage.", "Review your app against OWASP Top 10 basics."],
+  "Database Design": ["Learn normalization, relationships, constraints, and document-vs-relational modeling.", "Explain why MySQL stores users while MongoDB stores resumes/jobs."],
+  "React Native": ["Learn screens, navigation, components, state, and API integration.", "Create a mobile version of the resume matching flow."],
+  "Git": ["Practice branches, commits, merges, pull requests, and conflict resolution.", "Keep project milestones in separate branches with clean commit messages."],
+  "Communication": ["Practice explaining architecture, tradeoffs, bugs, and demos clearly.", "Prepare a 5-minute project walkthrough and viva answers."]
 }
-
