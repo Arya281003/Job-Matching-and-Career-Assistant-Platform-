@@ -9,6 +9,9 @@ pinned: false
 ---
 
 # AI-Powered Smart Job Matching + Career Assistant
+## Live Demo
+
+[Open UGrow Career Assistant](https://aryaagg-ugrow-career-assistant.hf.space)
 
 A full-stack job matching platform that parses resumes, extracts skills, compares candidates with job roles, identifies skill gaps, and generates learning/career/interview guidance.
 
