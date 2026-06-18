@@ -7,7 +7,7 @@ server:
 
 nlp:
   service:
-    base-url: http://localhost:8001
+    base-url: ${NLP_SERVICE_BASE_URL:http://localhost:8001}
 
 spring:
   servlet:
@@ -33,7 +33,7 @@ spring:
 
 app:
   cors:
-    allowed-origins: http://localhost:5173
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
   jobs:
     live:
       api-url: ${LIVE_JOBS_API_URL:https://remotive.com/api/remote-jobs}

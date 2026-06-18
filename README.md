@@ -202,3 +202,35 @@ It is suitable for portfolio/job interviews because it demonstrates:
 - View career path recommendations
 - View interview questions
 - Discuss evaluation metrics from `evaluate.py`
+
+## Deploy on Hugging Face Spaces
+
+Use a **Docker** Space. The root `Dockerfile` builds the React frontend, Spring Boot backend, and FastAPI NLP service into one container. The public Space port is `7860`; nginx serves the frontend and forwards `/api/*` to the backend.
+
+Hugging Face Spaces does not run `docker-compose.yml`, so use managed databases instead of local containers. Add these Space secrets:
+
+```text
+MYSQL_URL=jdbc:mysql://<host>:<port>/<database>?useSSL=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
+MYSQL_USER=<mysql-user>
+MYSQL_PASSWORD=<mysql-password>
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>/<database>?retryWrites=true&w=majority
+```
+
+Optional secrets/settings:
+
+```text
+NLP_USE_TRANSFORMER=false
+LIVE_JOBS_SCHEDULED=false
+```
+
+`NLP_USE_TRANSFORMER=false` keeps startup lighter for the free CPU tier. Set it to `true` only if your Space has enough memory and you want sentence-transformer embeddings.
+
+### Upload to a Space
+
+```bash
+git lfs install
+git remote add space https://huggingface.co/spaces/<your-username>/<your-space-name>
+git push space main
+```
+
+If you already use `origin` for GitHub, keep it and add Hugging Face as the separate `space` remote shown above.
