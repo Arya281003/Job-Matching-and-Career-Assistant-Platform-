@@ -97,8 +97,9 @@ public class MatchingService {
   }
 
   public MatchResponse matchFromProfile(ProfileUpsertRequest request) {
-    UserProfile profile = saveProfile(request);
-    String profileText = profileToText(profile);
+    String profileText = request.getUserId() == null
+        ? profileRequestToText(request)
+        : profileToText(saveProfile(request));
     List<NlpJobPayload> jobPayloads = loadJobPayloads();
     NlpMatchResponse nlpResp = nlpClientService.matchJobs("", profileText, jobPayloads);
 
@@ -242,6 +243,14 @@ public class MatchingService {
         nullToEmpty(profile.getSkills()),
         nullToEmpty(profile.getExperience()),
         nullToEmpty(profile.getCareerPreferences()));
+  }
+
+  private String profileRequestToText(ProfileUpsertRequest request) {
+    return String.join("\n",
+        nullToEmpty(request.getEducation()),
+        nullToEmpty(request.getSkills()),
+        nullToEmpty(request.getExperience()),
+        nullToEmpty(request.getCareerPreferences()));
   }
 
   private String nullToEmpty(String value) {

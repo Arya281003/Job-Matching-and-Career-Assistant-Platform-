@@ -1,9 +1,6 @@
 package com.example.jobmatch.dto;
 
-import jakarta.validation.constraints.NotNull;
-
 public class ProfileUpsertRequest {
-  @NotNull
   private Long userId;
 
   private String education;

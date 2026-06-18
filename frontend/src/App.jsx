@@ -174,12 +174,6 @@ function App() {
   }
 
   async function analyzeProfileOnly() {
-    if (!user?.id) {
-      setNotice("Sign in before finding job roles.");
-      setPage("auth");
-      return;
-    }
-
     const hasProfileInput = Object.values(profile).some((value) => String(value || "").trim());
     if (!hasProfileInput) {
       setNotice("Fill the candidate profile before finding job roles.");
@@ -187,7 +181,7 @@ function App() {
     }
 
     await run("Finding job roles", async () => {
-      const matched = await api.matchProfile({ userId: user.id, ...profile });
+      const matched = await api.matchProfile({ userId: user?.id || null, ...profile });
       setParseResult(null);
       setMatchResult(matched);
       api.listAnalyses().then(setAnalyses).catch(() => {});
@@ -272,10 +266,18 @@ function App() {
 function AppHeader({ user, onSignOut }) {
   return (
     <header className="app-topbar">
-      <div>
-        <p className="eyebrow">AI career assistant</p>
-        <h1>Smart Job Matching</h1>
+      <div className="brand-lockup">
+        <span className="brand-mark">U</span>
+        <div>
+          <p className="eyebrow">AI career assistant</p>
+          <h1>UGrow</h1>
+        </div>
       </div>
+      <nav className="top-nav" aria-label="Primary">
+        <span>Profile</span>
+        <span>Matches</span>
+        <span>Learning</span>
+      </nav>
       {user && (
         <div className="header-actions">
           <button className="secondary-button compact-button" onClick={onSignOut}>
@@ -291,17 +293,17 @@ function AuthPage({ mode, setMode, authForm, updateAuthForm, submitAuth, busy })
   return (
     <section className="auth-page">
       <div className="auth-hero">
-        <p className="eyebrow">Smart Job Matching + Career Assistant</p>
-        <h2>AI-Powered Smart Job Matching</h2>
+        <p className="eyebrow">AI Job Matching & Career Assistant</p>
+        <h2>Grow into the role you are built for.</h2>
         <p>
-          A resume analysis platform that extracts skills, compares candidate
-          fit with job roles, highlights skill gaps, and suggests learning,
-          career, and interview guidance.
+          Upload a resume, add a little context, and UGrow turns it into
+          job matches, skill gaps, learning options, and interview prep you can
+          actually use.
         </p>
         <div className="feature-strip">
-          <span>Resume parsing</span>
-          <span>Skill gap analysis</span>
-          <span>Career guidance</span>
+          <span><strong>3x</strong> Faster career fit checks</span>
+          <span><strong>80%</strong> Clearer skill gaps</span>
+          <span><strong>AI</strong> Guided learning path</span>
         </div>
       </div>
 
@@ -309,7 +311,7 @@ function AuthPage({ mode, setMode, authForm, updateAuthForm, submitAuth, busy })
         <div className="panel-heading">
           <div>
             <p className="eyebrow">Account</p>
-            <h2>{mode === "login" ? "Welcome back" : "Create account"}</h2>
+            <h2>{mode === "login" ? "Welcome back" : "Start your workspace"}</h2>
           </div>
         </div>
         <div className="segmented">
@@ -380,7 +382,7 @@ function UploadPage({
       <div className="page-heading">
         <div>
           <p className="eyebrow">Resume workspace</p>
-          <h2>Build your candidate profile and upload your resume</h2>
+          <h2>Tell UGrow what you know, then let your resume fill in the rest.</h2>
         </div>
         {user && (
           <div className="user-card slim-user-card">
@@ -395,7 +397,7 @@ function UploadPage({
           <div className="panel-heading">
             <div>
               <p className="eyebrow">Candidate profile</p>
-              <h2>Profile Builder</h2>
+              <h2>Profile notes</h2>
             </div>
           </div>
           <div className="profile-form">
@@ -446,7 +448,7 @@ function ResumeUploadCard({ resumeFile, setResumeFile, analyzeResume, busy }) {
       <div className="panel-heading">
         <div>
           <p className="eyebrow">Resume upload</p>
-          <h2>Upload & analyze</h2>
+          <h2>Upload your resume</h2>
         </div>
       </div>
       <label className="drop-zone">
@@ -459,9 +461,9 @@ function ResumeUploadCard({ resumeFile, setResumeFile, analyzeResume, busy }) {
         />
       </label>
       <div className="upload-summary">
-        <span>Skills will be extracted from the resume.</span>
-        <span>Jobs are ranked against backend-managed roles.</span>
-        <span>Profile + resume are used for recommendations.</span>
+        <span>Pulls out skills and experience signals.</span>
+        <span>Compares your background with available roles.</span>
+        <span>Combines resume details with your profile notes.</span>
       </div>
       <button className="primary-button full-width" disabled={Boolean(busy)}>
         {busy || "Analyze resume"}
@@ -476,7 +478,7 @@ function AvailableJobsPanel({ jobs, refreshLiveJobs, busy }) {
       <div className="panel-heading">
         <div>
           <p className="eyebrow">Available roles</p>
-          <h2>Backend-managed jobs</h2>
+          <h2>Roles in your library</h2>
         </div>
         <button
           type="button"
@@ -542,7 +544,7 @@ function ResultsPage({ topMatch, parseResult, matchResult, resumeFile, onBack, o
 
       <div className="learning-open-panel">
         <button className="primary-button learning-open-button" onClick={onOpenLearning}>
-          Open
+          Open learning path
         </button>
         <p>
           Learning paths for your current skill gaps with YouTube videos, free notes,
