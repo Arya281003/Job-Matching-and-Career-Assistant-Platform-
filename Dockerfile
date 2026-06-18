@@ -38,7 +38,7 @@ RUN python3 -m venv /opt/venv \
 COPY nlp-service/app ./nlp-service/app
 COPY --from=backend-build /app/backend/target/jobmatch-backend-0.1.0.jar ./backend/app.jar
 COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
-COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+COPY deploy/nginx.conf /etc/nginx/nginx.conf
 COPY deploy/start-space.sh ./start-space.sh
 
 RUN chmod +x ./start-space.sh
