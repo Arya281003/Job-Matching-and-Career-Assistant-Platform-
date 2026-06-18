@@ -49,11 +49,34 @@ function learningOptionsFor(skill, suggestions) {
   ];
 }
 
+const userStorageKey = "jobmatch:user";
+
+function readSavedUser() {
+  try {
+    if (typeof window === "undefined") return null;
+    const saved = window.localStorage?.getItem(userStorageKey);
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSavedUser(user) {
+  try {
+    if (typeof window === "undefined") return;
+    if (user) {
+      window.localStorage?.setItem(userStorageKey, JSON.stringify(user));
+    } else {
+      window.localStorage?.removeItem(userStorageKey);
+    }
+  } catch {
+    // Storage can be blocked in embedded or privacy-restricted browsers.
+  }
+}
+
 function App() {
-  const [page, setPage] = useState(() => {
-    const saved = localStorage.getItem("jobmatch:user");
-    return saved ? "upload" : "auth";
-  });
+  const initialUser = useMemo(readSavedUser, []);
+  const [page, setPage] = useState(() => (initialUser ? "upload" : "auth"));
   const [mode, setMode] = useState("login");
   const [authForm, setAuthForm] = useState({
     fullName: "",
@@ -61,10 +84,8 @@ function App() {
     password: "",
   });
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem("jobmatch:user");
-    const parsed = saved ? JSON.parse(saved) : null;
-    setAuthToken(parsed?.token || "");
-    return parsed;
+    setAuthToken(initialUser?.token || "");
+    return initialUser;
   });
   const [profile, setProfile] = useState(sampleProfile);
   const [jobs, setJobs] = useState([]);
@@ -132,7 +153,7 @@ function App() {
 
       setUser(signedInUser);
       setAuthToken(signedInUser.token || "");
-      localStorage.setItem("jobmatch:user", JSON.stringify(signedInUser));
+      writeSavedUser(signedInUser);
       setPage("upload");
       setNotice(`Welcome, ${signedInUser.fullName}.`);
     });
@@ -205,7 +226,7 @@ function App() {
     setPage("auth");
     setParseResult(null);
     setMatchResult(null);
-    localStorage.removeItem("jobmatch:user");
+    writeSavedUser(null);
     setNotice("Signed out.");
   }
 
