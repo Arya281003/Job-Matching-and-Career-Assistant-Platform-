@@ -1,3 +1,13 @@
+---
+title: UGrow Career Assistant
+emoji: 🤗
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # AI-Powered Smart Job Matching + Career Assistant
 
 A full-stack job matching platform that parses resumes, extracts skills, compares candidates with job roles, identifies skill gaps, and generates learning/career/interview guidance.
